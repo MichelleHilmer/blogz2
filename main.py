@@ -93,29 +93,35 @@ def signup():
         
         if len(name) > 0:
                 if ' ' in name:
-                        user_error = 'Thats not a valid email.'
+                        user_error = 'Thats not a valid username.'
                         name = ''
                 elif len(name) < 3 and len(name) > 20:
-                        user_error = "Thats not a valid email."
+                        user_error = "Thats not a valid username."
                         name = ''
 
-        if not password_error and not verify_error and not user_error:
-            existing_user = User.query.filter_by(name=name).first()
-            if not existing_user:
-                new_user = User(name, password)
-                db.session.add(new_user)
-                db.session.commit()
-                session['name'] = name
+        existing_user = User.query.filter_by(name=name).first()
+        print('helloooooooooooooo',existing_user)
 
-            return redirect('/newpost')
+        if existing_user:
+            user_error = "User already exist"
+            name = ''
+
+        if password_error or verify_error or user_error:
+            return render_template('signup.html', password_error=password_error, user_error=user_error, verify_error=verify_error)    
 
         else:
-            if existing_user:
-                user_error = "User already exist"
-                name = ''
+            if not password_error and not verify_error and not user_error:
+            
+                if not existing_user:
+                    new_user = User(name, password)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    session['name'] = name
 
-            return user_error
+                    return redirect('/newpost')
+        
 
+        
     return render_template('signup.html')
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -135,12 +141,13 @@ def login():
         elif not user:
             user_error = "Username doesn't exist."
             name = ''
-            return user_error
+            return render_template('login.html', user_error=user_error)
 
-        if password == '':
-            password_error = "make sure you entered the right password"
-            password= ''
-            return password_error
+        else:
+            if password == '' or password != user.password:
+                password_error = "make sure you entered the right password"
+                password= ''
+                return render_template('login.html', password_error=password_error, user=user)
             
         return render_template('login.html', name=name, password=password, user_error=user_error, password_error=password_error)
 
@@ -149,10 +156,9 @@ def login():
 
 @app.route("/singleUser", methods=['POST','GET'])
 def singleUser():
+    users = User.query.filter_by(name=session['name']).first()
     user_id = request.args.get('id')
-    print('hellooooooooooooooooooo', user_id)
-    user = User.query.get(user=user_id)
-    blogz = Blog.query.filter_by(user).all()
+    blogz = Blog.query.filter_by(owner_id=user_id).all()
 
     return render_template('singleUser.html', blogz=blogz)
 
@@ -163,9 +169,7 @@ def singleUser():
 def blog():
     blog_entries = Blog.query.all()
     blog_id = request.args.get('id')
-    print("not over here!!!!!!!!!!!", blog_id)
     user_id = request.args.get('name')
-    print("here it is!!!!!!!!!!!!!!!",user_id)
 
     if blog_id == None:
         blog_entries = Blog.query.all()
