@@ -100,7 +100,6 @@ def signup():
                         name = ''
 
         existing_user = User.query.filter_by(name=name).first()
-        print('helloooooooooooooo',existing_user)
 
         if existing_user:
             user_error = "User already exist"
@@ -176,7 +175,7 @@ def blog():
         return render_template('blog.html', blog_entries=blog_entries)
 
     elif blog_id:
-        new_entry = Blog.query.all(blog_id)
+        new_entry = Blog.query.filter_by(id=blog_id).first()
         return render_template('post.html', new_entry=new_entry)
 
     else:
