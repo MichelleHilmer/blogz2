@@ -175,12 +175,14 @@ def blog():
         return render_template('blog.html', blog_entries=blog_entries)
 
     elif blog_id:
-        new_entry = Blog.query.filter_by(id=blog_id).first()
+        new_entry = Blog.query.filter_by(id=user_blog).first()
         return render_template('post.html', new_entry=new_entry)
 
     else:
         if user_id:
-            blogz = Blog.query.get(user_id)
+            users = User.query.filter_by(name=session['name']).first()
+            user_id = request.args.get('id')
+            blogz = Blog.query.filter_by(owner_id=user_id).all()
             return render_template('singleUser.html', blogz=blogz)
 
     return render_template('blog.html', blog_entries=blog_entries, name=name)
